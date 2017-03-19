@@ -9,7 +9,7 @@ import unittest
 
 from django.core.urlresolvers import reverse
 from collections import namedtuple
-from urljects import U, slug, url
+from urljects import U, slug, url, pk, end
 from . import views
 
 DJANGO_GTE_1_9 = django.VERSION[:2] >= (1, 9)
@@ -68,6 +68,18 @@ class TestURLjects(unittest.TestCase):
         self.assertEqual(
             (U / '/something' / '/else').get_value(),
             (U / 'something' / 'else').get_value())
+
+    def test_renamed(self):
+        """Tests that renaming of patterns work fine."""
+        self.assertEqual(
+            (U / r'(?P<plug>[\w-]+)').get_value(),
+            (U / r'(?P<slug>[\w-]+)' % 'plug').get_value())
+        self.assertEqual(
+            (U / r'(?P<plug>[\w-]+)' / pk).get_value(),
+            (U / r'(?P<slug>[\w-]+)' % 'plug' / pk).get_value())
+        self.assertEqual(
+            (U / r'(?P<plug>[\w-]+)' / end).get_value(),
+            (U / r'(?P<slug>[\w-]+)' % 'plug' / end).get_value())
 
 
 class TestURL(unittest.TestCase):

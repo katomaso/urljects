@@ -24,6 +24,7 @@ class URLPattern(object):
     The value of this object will always be regular expression usable in django
     url.
     """
+    name_re = re.compile(r'P<([\w_-]+)>')
 
     def __init__(self, value=None, separator=SEPARATOR, ends=True):
         """
@@ -40,8 +41,8 @@ class URLPattern(object):
             self.add_part(value)
 
     def add_part(self, part):
-        """
-        Function for adding partial pattern to the value
+        """Append new pattern to the URL.
+
         :param part: string or compiled pattern
         """
         if isinstance(part, RE_TYPE):
@@ -54,14 +55,12 @@ class URLPattern(object):
         return self
 
     def get_value(self, ends_override=None):
-        """
-        This function finishes the url pattern creation by adding starting
-        character ^ end possibly by adding end character at the end
+        """Finish the url pattern by adding starting and optionally ending.
 
         :param ends_override: overrides ``self.ends``
         :return: raw string
         """
-        value = self.separator.join(self.parts)
+        value = self.separator.join(filter(None, self.parts))
         ends = ends_override if ends_override is not None else self.ends
 
         if not value:  # use case: wild card imports
@@ -82,16 +81,17 @@ class URLPattern(object):
         return value
 
     def __div__(self, other):
-        """
-        PY2 division
-        """
+        """PY2 division."""
         return self.add_part(other)
 
     def __truediv__(self, other):
-        """
-        PY3 division
-        """
+        """PY3 division."""
         return self.add_part(other)
+
+    def __mod__(self, other):
+        """Use % operator ro rename last pattern."""
+        last_pattern = self.parts.pop()
+        return self.add_part(self.name_re.sub('P<' + other + '>', last_pattern))
 
     def __repr__(self):
         return self.get_value() or ''

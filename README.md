@@ -44,7 +44,7 @@ from django.views.generic import DetailView
 
 class ItemDetail(URLView, DetailView):
     name = 'detail'
-    url = U / 'detail' / slug
+    url_name = U / 'detail' / slug
 ```
 
 A lot of people enjoy functional views, for those there is ``url_view`` decorator.
@@ -57,7 +57,7 @@ def detail(request, rest)
     ...
 ```
 
-After that you can user ``view_include`` instead of creating ``urls.py`` and
+After that you can use ``view_include`` instead of creating ``urls.py`` and
 then old-style ``include`` them afterwards.
 
 
@@ -72,14 +72,29 @@ We even provide modified ``url`` function to strip away the boilerplate of
 from urljects import U, slug, url
 
 url_patterns = (
-    url(U / 'detail' / slug, view=DetailView),
+    url(U / 'detail' / slug, view=DetailView),  # has to define DetailView.url_name
     # instead of
     url(r'^detail/(?P<slug>[\w-]+)' , view=DetailView.as_view(),
         name='detail'),
 )
 ```
+In this example, if you don't provide the name for the url then the view has to
+define ``DetailView.url_name`` or be a function (name is the name of the function).
 
-The name of the view has been taken from ``DetailView.url_name``.
-There are also some common regular patterns like slugs and UUIDs so that you
-can focus on more important stuff than on debugging regular expressions.
+## I cannot use your pre-defined names like 'slug' or 'rest'
 
+When you have hard-coded parameters in views you can still use urljects! Modulo
+operator does the trick.
+
+```python
+
+# url definition
+url(U / 'account' / slug, my_view)
+url(U / 'account' / slug % 'username', provided_view)
+
+# view definition before renaming
+def view_user(request, slug):
+
+# view definition after renaming
+def provided_view(request, username)
+```
