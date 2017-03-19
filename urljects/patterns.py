@@ -1,4 +1,5 @@
 import re
+import warnings
 
 beginning = r'^'
 end = r'$'
@@ -33,6 +34,10 @@ class URLPattern(object):
         self.parts = [value.strip(separator)] if value else []
         self.separator = separator
         self.ends = ends
+        if value:
+            warnings.warn(DeprecationWarning(
+                "'value' in URLPattern constructor will be removed"))
+            self.add_part(value)
 
     def add_part(self, part):
         """
@@ -42,17 +47,10 @@ class URLPattern(object):
         if isinstance(part, RE_TYPE):
             part = part.pattern
 
-        if not self.parts:
-            # This enables the U / '' syntax
-            return URLPattern(
-                value=part,
-                separator=self.separator,
-                ends=self.ends)
-        else:
-            # stripping separator enables translated urls with hint what
-            # string is actual url and which is a normal word
-            # url(U / _('/my-profile'), private.Home, name="admin-home"),
-            self.parts.append(part.strip(self.separator))
+        # stripping separator enables translated urls with hint what
+        # string is actual url and which is a normal word
+        # url(U / _('/my-profile'), private.Home, name="admin-home"),
+        self.parts.append(part.strip(self.separator))
         return self
 
     def get_value(self, ends_override=None):
@@ -99,4 +97,18 @@ class URLPattern(object):
         return self.get_value() or ''
 
 
-U = URLPattern()
+class URLFactory(object):
+    """Create new URLPattern on every beginning of a new URL."""
+
+    def __div__(self, other):
+        return URLPattern().add_part(other)
+    __truediv__ = __div__
+
+    def get_value(self, ends_override=None):
+        """Dispatch the call to URLPattern instance."""
+        return URLPattern().add_part('').get_value(ends_override)
+    __repr__ = get_value
+    __str__ = get_value
+
+
+U = URLFactory()

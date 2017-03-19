@@ -5,7 +5,7 @@ import importlib
 
 from collections import defaultdict
 from django.conf import urls
-from .patterns import URLPattern
+from .patterns import URLPattern, URLFactory
 
 
 class URLView(object):
@@ -91,7 +91,7 @@ def url(url_pattern, view, kwargs=None, name=None):
     :param kwargs: kwargs that are to be passed to view
     :param name: name of the view, if empty it will be guessed
     """
-    if isinstance(url_pattern, URLPattern):
+    if isinstance(url_pattern, (URLPattern, URLFactory)):
         if isinstance(view, tuple):  # this is included view
             url_pattern = url_pattern.get_value(ends_override=False)
         else:
