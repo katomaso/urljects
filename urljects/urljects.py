@@ -93,7 +93,7 @@ def url(url_pattern, view, kwargs=None, name=None):
     """
     if isinstance(url_pattern, (URLPattern, URLFactory)):
         if isinstance(view, tuple):  # this is included view
-            url_pattern = url_pattern.get_value(ends_override=False)
+            url_pattern = url_pattern.get_value(separate=True)
         else:
             url_pattern = url_pattern.get_value()
 
@@ -142,7 +142,7 @@ def view_include(view_module, namespace=None, app_name=None):
 
     view_patterns = list(*[
         view_dict[priority] for priority in sorted(view_dict)
-        ])
+    ])
 
     return urls.include(
         arg=view_patterns,

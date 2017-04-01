@@ -28,19 +28,21 @@ class URLPattern(object):
     """
     name_re = re.compile(r'P<([\w_-]+)>')
 
-    def __init__(self, value=None, separator=SEPARATOR, ends=True):
+    def __init__(self, value=None, separator=SEPARATOR, ends=None):
         """
         :param value: Initial value of the URL
         :param separator: used to separate parts of the url, usually /
-        :param ends: open urls should be used only for included urls
         """
         self.parts = [value.strip(separator)] if value else []
         self.separator = separator
-        self.ends = ends
         if value:
             warnings.warn(DeprecationWarning(
                 "'value' in URLPattern constructor will be removed"))
             self.add_part(value)
+        if ends is not None:
+            warnings.warn(DeprecationWarning(
+                "'ends' in URLPattern is not used"))
+
 
     def add_part(self, part):
         """Append new pattern to the URL.
@@ -56,30 +58,31 @@ class URLPattern(object):
         self.parts.append(part.strip(self.separator))
         return self
 
-    def get_value(self, ends_override=None):
+    def get_value(self, separate=False):
         """Finish the url pattern by adding starting and optionally ending.
 
-        :param ends_override: overrides ``self.ends``
+        :param bool separate: force separator at the end of URL
         :return: raw string
         """
-        value = self.separator.join(filter(None, self.parts))
-        ends = ends_override if ends_override is not None else self.ends
+        closing = None
+        # do not separate closing part by '/'
+        if self.parts and self.parts[-1].endswith(end):
+            closing = self.parts.pop()
 
-        if not value:  # use case: wild card imports
-            if ends:
-                return r'^$'
-            return r'^'
+        value = self.separator.join(self.parts)
+        # put back the closing part without being separated by '/'
+        if closing is not None:
+            value += closing
 
-        if value[0] != beginning:
+        # every URL should start with ^
+        if value and value[0] != beginning:
             value = beginning + value
-
-        if ends and value[-1] != end:
-            value += end
-
-        # included views usually ends with separator
-        if not ends and value[-1] != self.separator:
+        # no url should start with ^/
+        if value and value.startswith('^/'):
+            value = beginning + value[2:]
+        # do not mingle with ending except for ``separate=True``
+        if value and separate and value[-1] != self.separator:
             value += self.separator
-
         return value
 
     def __div__(self, other):
@@ -106,9 +109,11 @@ class URLFactory(object):
         return URLPattern().add_part(other)
     __truediv__ = __div__
 
-    def get_value(self, ends_override=None):
-        """Dispatch the call to URLPattern instance."""
-        return URLPattern().add_part('').get_value(ends_override)
+    def get_value(self, separate=False):
+        """Return empty regex based on ``separate``."""
+        if separate:
+            return ''
+        return '^$'
     __repr__ = get_value
     __str__ = get_value
 

@@ -53,20 +53,28 @@ class TestURLjects(unittest.TestCase):
                 url_test.new_url.get_value())
 
     def test_compile(self):
-        """Tests that U object can actually compile to regex."""
+        """Test that U object can actually compile to regex."""
         patterns_to_compile = (g.new_url for g in test_data)
         for pattern in patterns_to_compile:
             re.compile(pattern.get_value())
 
     def test_compiled_pattern(self):
-        """Tests that U object can work with compiled patterns."""
+        """Test that U object can work with compiled patterns."""
         compiled_slug = re.compile(slug)
         self.assertEqual(
             (U / 'something' / compiled_slug).get_value(),
             (U / 'something' / slug).get_value())
 
+    def test_url_factory(self):
+        """Test illegal states."""
+        self.assertEqual(U.get_value(), '^$')
+        self.assertEqual(U.get_value(separate=True), '')
+
     def test_separated_values(self):
-        """Tests that separator in values does not lead to double-separated url."""
+        """Test that separator in values does not lead to double-separated url."""
+        self.assertEqual(
+            (U / '/something').get_value(),
+            '^something')
         self.assertEqual(
             (U / '/something').get_value(),
             (U / 'something').get_value())
@@ -78,7 +86,7 @@ class TestURLjects(unittest.TestCase):
             (U / 'something' / 'else').get_value())
 
     def test_renamed(self):
-        """Tests that renaming of patterns work fine."""
+        """Test that renaming of patterns work fine."""
         self.assertEqual(
             (U / r'(?P<plug>[\w-]+)').get_value(),
             (U / r'(?P<slug>[\w-]+)' % 'plug').get_value())
@@ -91,8 +99,9 @@ class TestURLjects(unittest.TestCase):
 
 
 class TestURL(unittest.TestCase):
-    """
-    Tests urljects.url function, basically this only tests that django internal
+    """Test urljects.url function.
+
+    Basically this only tests that django internal
     url function is being called correctly and since it is extensively tested
     by django internal tests we can already assume that it is working if it is
     being called correctly
@@ -131,7 +140,7 @@ class TestURL(unittest.TestCase):
 
 
 class TestAPP(unittest.TestCase):
-    """Tests Django integration without mocking.
+    """Test Django integration without mocking.
 
     URLs are registered in ``main_url_conf.py``
     """
