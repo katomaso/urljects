@@ -3,6 +3,8 @@ import warnings
 
 beginning = r'^'
 end = r'$'
+html = r'\.html$'
+json = r'\.json$'
 
 slug = r'(?P<slug>[\w-]+)'
 pk = r'(?P<pk>\d+)'
