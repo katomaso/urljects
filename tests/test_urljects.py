@@ -9,7 +9,7 @@ import unittest
 
 from django.core.urlresolvers import reverse
 from collections import namedtuple
-from urljects import U, slug, url, pk, end
+from urljects import U, slug, url, pk, end, html
 from . import views
 
 DJANGO_GTE_1_9 = django.VERSION[:2] >= (1, 9)
@@ -18,24 +18,32 @@ URLTest = namedtuple('URLTest', ['old_url', 'new_url'])
 test_data = [
     URLTest(
         old_url=r'^detail/(?P<slug>[\w-]+)$',
-        new_url=U / 'detail' / slug,
+        new_url=U / 'detail' / slug / end,
     ),
     URLTest(
         old_url=r'^(?P<slug>[\w-]+)$',
-        new_url=U / slug,
+        new_url=U / slug / end,
     ),
     URLTest(
-        old_url=r'^static$',
+        old_url=r'^static',
         new_url=U / 'static',
     ),
 ]
 
 
 class TestURLjects(unittest.TestCase):
+    """Test pattern creation."""
+
     def test_regulars(self):
         """Test that old_url is same as new_url."""
         for url_test in test_data:
             self.assertEqual(url_test.old_url, url_test.new_url.get_value())
+
+    def test_endings(self):
+        """No ending enforced."""
+        self.assertEqual((U / "hello").get_value(), "^hello")
+        self.assertEqual((U / "hello" / end).get_value(), "^hello$")
+        self.assertEqual((U / "hello" / html).get_value(), "^hello\\.html$")
 
     def test_str_method(self):
         """Test that __repr__ returns expected value."""
@@ -92,7 +100,7 @@ class TestURL(unittest.TestCase):
 
     @mock.patch('django.conf.urls.url')
     def test_func_view(self, mocked_url):
-        url(U, view=views.test_view)
+        url(U / end, view=views.test_view)
         mocked_url.assert_called_once_with(
             regex='^$',
             view=views.test_view,
@@ -103,7 +111,7 @@ class TestURL(unittest.TestCase):
     @unittest.skipIf(DJANGO_GTE_1_9, "Django >= 1.9 has deprecated string views")
     @mock.patch('django.conf.urls.url')
     def test_string_view(self, mocked_url):
-        url(U / 'test', view='views.test_view')
+        url(U / 'test' / end, view='views.test_view')
         mocked_url.assert_called_once_with(
             regex='^test$',
             view='views.test_view',
@@ -113,7 +121,7 @@ class TestURL(unittest.TestCase):
 
     @mock.patch('django.conf.urls.url')
     def test_class_view(self, mocked_url):
-        url(U / 'class_view', view=views.ViewClass)
+        url(U / 'class_view' / end, view=views.ViewClass)
         mocked_url.assert_called_once_with(
             regex='^class_view$',
             view=views.ViewClass.as_view(),

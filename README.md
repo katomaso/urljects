@@ -14,8 +14,13 @@ Library which greatly simplifies django urls definition! And as a side effect it
 # old urls notation
 url('^detail/(?<slug>[\w-]+)', MyDetailView.as_view(), name='detail')
 # easified !even translated! notation
-url(U / _('detail') / slug, MyDetailView, name='detail')
+url(U / _('detail') / slug / end, MyDetailView, name='detail')
 ```
+
+Every url in django should end with either ``'$'`` (alias ``urljects.end``) or
+with ``'/'``. Your responsibility is to use ``urljects.end`` when you are done
+with URL definition. ``urljects``'s responsibility is to append ``'/'`` when
+you use non-ended url in ``include``.
 
 ## Getting rid of ``urls.py``
 
